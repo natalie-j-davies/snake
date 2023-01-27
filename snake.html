@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="stylesheet" type="text/css" href="css/style.css"/>
+    <link rel="stylesheet" type="text/css"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css"/>
+    <title>Snake</title>
+    <script src="https://code.jquery.com/jquery-1.11.3.js"></script>
+</head>
+<body id="body">
+    <button id="btn_stop" >pause</button>
+    <p id="end_msg"></p>
+
+    <div class="container">
+    <canvas width="660" height="660" id="game"></canvas>
+    </div>
+<script>
+    var canvas = document.getElementById('game');
+    var context = canvas.getContext('2d');
+    var grid = 16;
+    var count = 0;
+    var score = 0;
+    var life = 3;
+
+    var maximum = 0;
+    var snake = {
+        x: 160, 
+        y: 160,
+        dx: grid, 
+        dy: 0,
+        cells: [],
+        maxCells: 4
+    };
+    var apple = {
+        x: 320,
+        y: 320
+    };
+    var bomb ={
+        x: 160,
+        y: 160
+    }
+    function getRandomInt(min, max){
+        return Math.floor(Math.random() * (max - min)) + min;
+    }
+    function loop(){
+        requestAnimationFrame(loop);
+
+        if(++count < 10){
+            return;
+        }
+
+
+
+        count = 0;
+        context.clearRect(0,0,canvas.width,canvas.height);
+            
+        snake.x += snake.dx;
+        snake.y += snake.dy;
+
+        if(snake.x < 0){
+            snake.x = canvas.width - grid;
+        }
+        else if(snake.x >= canvas.width){
+            snake.x = 0;
+        }
+
+        if (snake.y < 0) {
+            snake.y = canvas.height - grid;
+        }
+        else if (snake.y >= canvas.height) {
+            snake.y = 0;
+        }
+
+        snake.cells.unshift({x: snake.x, y: snake.y});
+
+
+
+        if(snake.cells.length > snake.maxCells){
+            snake.cells.pop();
+        }
+    //draw bomb
+        context.fillStyle = 'yellow';
+        context.fillRect(bomb.x,bomb.y,grid-1,grid-1);
+     
+    //drawing apple
+        context.fillStyle = 'red';
+        context.fillRect(apple.x, apple.y, grid-1, grid-1);
+
+    //draw snake one cell at a time
+        context.fillStyle = 'green';
+        context.font = '18px monospace';
+        snake.cells.forEach(function(cell, index) {
+        context.fillRect(cell.x, cell.y, grid-1, grid-1);
+
+    //draw score and highscore within canvas
+        context.fillText('Score: '+score,15,15);
+        context.fillText('High Score: '+maximum,15,35);
+        context.fillText('Lives: '+life,250,15);
+    //draw exit button
+        context.fillText('X',canvas.width-15,15);
+    
+        //if apple is eaten gain a point and a cell
+        if(cell.x === apple.x && cell.y === apple.y){
+            snake.maxCells++;
+            score += 1;
+            //save score 
+            localStorage.setItem('score', score);
+                    
+            apple.x = getRandomInt(0, 25) * grid;
+            apple.y = getRandomInt(0, 25) * grid;
+
+            }
+        //if bomb is touched loose life
+        if(cell.x === bomb.x && cell.y === bomb.y){
+            //loose a life
+            life-=1;
+            //save score 
+            localStorage.setItem('lives', life);
+                    
+            bomb.x = getRandomInt(0, 25) * grid;
+            bomb.y = getRandomInt(0, 25) * grid;
+            }
+        //if 0 lives you loose GAME OVER
+        //collision checker
+        for(var i = index + 1; i < snake.cells.length; i++){
+
+        // if snake occupies same space reset
+            if(cell.x === snake.cells[i].x && cell.y === snake.cells[i].y||life ===0){
+                snake.x = 160;
+                snake.y = 160;
+                snake.cells = [];
+                snake.maxCells = 4;
+                snake.dx = grid;
+                snake.dy = 0;
+                score = 0;
+                apple.x = getRandomInt(0, 25) * grid;
+                apple.y = getRandomInt(0, 25) * grid;
+                life = 3;
+                    }
+                }
+            });
+        }
+        document.addEventListener('keydown', function(e) {
+            //collision checker
+            // left arrow key
+            if (e.which === 37 && snake.dx === 0) {
+                snake.dx = -grid;
+                snake.dy = 0;
+            }
+            // up arrow key
+            if (e.which === 38 && snake.dy === 0) {
+                snake.dy = -grid;
+                snake.dx = 0;
+            }
+            // right arrow key
+            else if (e.which === 39 && snake.dx === 0) {
+                snake.dx = grid;
+                snake.dy = 0;
+            }
+             // down arrow key
+            else if (e.which === 40 && snake.dy === 0) {
+                snake.dy = grid;
+                snake.dx = 0;
+            }
+        });
+        requestAnimationFrame(loop);
+
+    function myFunction() {
+        document.getElementById('end_msg').innerHTML="";
+        alert('Press confirm to continue');
+    }
+
+//stop playing
+    $(document).ready(function(){
+	    $('#btn_stop').click(function(){
+        document.getElementById('end_msg').innerHTML="Paused" ;
+        setTimeout(myFunction, 1000);	
+		});
+	});
+</script>
+</body>
+</html>
